@@ -48,13 +48,17 @@ local function onPerkFnMulRet(fnName, cond, ...)
       if perkInfo[perkName].activateLast then
         lastFns[#lastFns+1] = perkFuncTable[fnName]
       else
-        res = res * perkFuncTable[fnName](...)
+    if perkFuncTable[fnName](...) ~= nil then
+      res = res * perkFuncTable[fnName](...)
+    end
       end
     end
   end
 
   for i,fn in ipairs(lastFns) do
-    res = res * fn(...)
+    if fn(...) ~= nil then
+      res = res * fn(...)
+    end 
   end
 
   return res
