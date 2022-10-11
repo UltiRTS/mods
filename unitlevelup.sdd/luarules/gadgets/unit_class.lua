@@ -48,9 +48,10 @@ local function onPerkFnMulRet(fnName, cond, ...)
       if perkInfo[perkName].activateLast then
         lastFns[#lastFns+1] = perkFuncTable[fnName]
       else
-    if perkFuncTable[fnName](...) ~= nil then
-      res = res * perkFuncTable[fnName](...)
-    end
+        local perk = perkFuncTable[fnName](...)
+        if perk ~= nil then
+          res = res * perk
+        end
       end
     end
   end
@@ -138,9 +139,10 @@ end
 
 local function onInvolvedPreDamage(unitID, ...)
   local r1 = onPreDamage(unitID, ...)
-  local r2 = onPreDamaged(unitID, ...)
+  -- local r2 = onPreDamaged(unitID, ...)
 
-  return r1 or r2 or 1.0
+  -- return r1 or r2 or 1.0
+  return r1 or 1.0
 end
 
 local function onDeath(unitID, ...)
