@@ -139,10 +139,10 @@ end
 
 local function onInvolvedPreDamage(unitID, ...)
   local r1 = onPreDamage(unitID, ...)
-  -- local r2 = onPreDamaged(unitID, ...)
+  local r2 = onPreDamaged(unitID, ...)
 
-  -- return r1 or r2 or 1.0
-  return r1 or 1.0
+  return r1 or r2 or 1.0
+  -- return r1 or 1.0
 end
 
 local function onDeath(unitID, ...)

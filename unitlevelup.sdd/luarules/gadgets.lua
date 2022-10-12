@@ -1538,7 +1538,7 @@ function gadgetHandler:UnitDamaged(unitID, unitDefID, unitTeam,
 		end
     for _,g in r_ipairs(self.UnitDamagedWithProjList) do
 			UnitDamaged_count = UnitDamaged_count + 1
-			UnitDamaged_gadgets[UnitDamaged_count] = g      
+			UnitDamaged_gadgets[UnitDamaged_count] = g
     end
 		UnitDamaged_first = false
 	end
