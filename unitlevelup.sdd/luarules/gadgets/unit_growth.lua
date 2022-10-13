@@ -364,6 +364,8 @@ local function setStats(unitID, UnitDef, experience)
 	GG.PerkOnStatChange(unitID)
 end
 
+
+-- unitReplaceList[unitID] = { udName = normalName, team = unitTeam, reverse = false }
 local unitReplaceList = {}
 local autoxpList = {}
 function gadget:Initialize()
@@ -434,7 +436,9 @@ function gadget:GameFrame(n)
 
 	if (n % 30 < 0.01) then
 		for id,rate in pairs(autoxpList) do
-			spSetUnitExperience(id, spGetUnitExperience(id) + rate);
+			if rate ~= nil then
+				spSetUnitExperience(id, spGetUnitExperience(id) + rate);
+			end
 		end
 	end
 end
