@@ -1,0 +1,3 @@
+[submodule "mod.sdd"]
+	path = mod.sdd
+	url = https://github.com/UltiRTS/Zero-K
