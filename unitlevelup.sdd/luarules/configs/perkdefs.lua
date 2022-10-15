@@ -142,6 +142,15 @@ local perkDefs = {
     prerequisites = { "moreDrones" },
     affectsDrones = true,
     activateLast = true
+  },
+  godSavesU = {
+    name = "God Saves You",
+    id = 21,
+    description = "increase 1% health and 1% damage per secs",
+    icon = "god_saves_u.png",
+    -- prerequisites = { "moreDrones" },
+    -- affectsDrones = true,
+    -- activateLast = true
   }
 }
 
