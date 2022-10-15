@@ -1,4 +1,4 @@
-local nextFrameDamage = {}
+-- local nextFrameDamage = {}
 local inED = {}
 
 return {
@@ -10,8 +10,8 @@ return {
         if not inED[attackerID] then
             inED[attackerID] = true
             -- Spring.AddUnitDamage(unitID, 0.0, damage * 4.0, attackerID)
-            nextFrameDamage[#nextFrameDamage+1] = { unit = unitID, attacker = attackerID, dmg = damage * 4.0 }
-            return 0.0
+            -- nextFrameDamage[#nextFrameDamage+1] = { unit = unitID, attacker = attackerID, dmg = damage * 4.0 }
+            return 4.0
         else
             inED[attackerID] = nil
             return 1.0
