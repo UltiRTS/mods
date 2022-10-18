@@ -144,10 +144,10 @@ local perkDefs = {
     activateLast = true
   },
   godSavesU = {
-    name = "God Saves You",
+    name = "Vampire",
     id = 21,
-    description = "increase 1% health and 1% damage per secs",
-    icon = "god_saves_u.png",
+    description = "return your damage as hp",
+    icon = "vampire.png",
     -- prerequisites = { "moreDrones" },
     -- affectsDrones = true,
     -- activateLast = true
