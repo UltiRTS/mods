@@ -15,6 +15,9 @@ return {
       local shieldName = (UnitDefs[ownerUnitDef].name == [[staticantinuke]] and "anti") or "tiny"
       local shieldStrength = (shieldName == "anti" and 10000) or 1000
       local unitID = GG.CreateShieldDummy({proj = projectileID}, shieldName, true)
+      if unitID == nil then
+        return
+      end
       Spring.SetUnitShieldState(unitID, 1, true, shieldStrength)
     end
   end

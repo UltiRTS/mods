@@ -13,6 +13,10 @@ end
 if (gadgetHandler:IsSyncedCode()) then
   function createWeaponDummy(unitOrProjID, weaponName)
     local unitID = GG.CreateDummyUnit(unitOrProjID, "weapondummy_" .. string.lower(weaponName))
+    if unitID == nil then
+      return nil
+    end
+
     return unitID
   end
 

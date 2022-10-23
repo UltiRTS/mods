@@ -40,6 +40,9 @@ function createDummyUnit(unitOrProjID, defName)
     x, y, z = Spring.GetProjectilePosition(forProjID)
     team = Spring.GetUnitTeam(projOwner)
     unitID = Spring.CreateUnit(defName, x, y + 40, z, 0, team)
+    if unitID == nil then
+      return nil
+    end
 
     dummyProjTable[forProjID] = dummyProjTable[forProjID] or {}
     dummyProjTable[forProjID][unitID] = true
