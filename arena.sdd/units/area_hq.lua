@@ -62,6 +62,7 @@ local unitDef = {
     [[turretaaclose]],
     [[turretheavy]],
     [[energypylon]],
+    [[pw_grid]],
   },
 
   -- Movement & Placement
