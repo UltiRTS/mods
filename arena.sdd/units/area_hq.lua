@@ -60,6 +60,7 @@ local unitDef = {
     [[turretemp]],
     [[turretaaflak]],
     [[turretaaclose]],
+    [[turretheavy]],
   },
 
   -- Movement & Placement
