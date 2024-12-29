@@ -563,16 +563,6 @@ local function SpawnChicken(burrowID, spawnNumber, chickenName)
 			spGiveOrderToUnit(unitID, CMD.MOVE_STATE, roamParam, 0) --// set moveState to roam
 			if (tloc) then spGiveOrderToUnit(unitID, CMD_FIGHT, tloc, 0) end
 			data.chickenBirths[unitID] = now
-
-            e = random(0, 200 + data.waveNumber * 2)
-
-            if (e > 299) then
-                Spring.SetUnitExperience(unitID, 30.0)
-            elseif (e > 199) then
-                Spring.SetUnitExperience(unitID, 20.0)
-            elseif (e > 149) then
-                Spring.SetUnitExperience(unitID, 4.0)
-            end
 		end
 	end
 end

@@ -94,6 +94,7 @@ local function spawnClusterProjectile(spawnInfo)
     }
 
     Spring.SpawnSFX(spawnInfo.owner, 2047 + weaponIdx, spawnPosX, spawnPosY, spawnPosZ, dirX, dirY, dirZ, true)
+    return nil
   elseif fromProjectile and fromProjectile > 0 then
     local projectileID = Spring.SpawnProjectile(weaponDefID, {
       pos = {spawnPosX, spawnPosY, spawnPosZ},
@@ -112,19 +113,23 @@ local function spawnClusterProjectile(spawnInfo)
     else
       Spring.SetProjectileTarget(projectileID, targetPosX, targetPosY, targetPosZ)
     end
-  end
 
-  return true
+    return projectileID
+  end
 end
 
 local function prepareUnitClusterWeapons(unitID)
   local unitDef = UnitDefs[Spring.GetUnitDefID(unitID)]
   for _,wd in ipairs(unitDef.weapons) do
     local wdID = wd.weaponDef
-    Script.SetWatchWeapon(wdID, true)
+    
+    if not (WeaponDefs[wdID].type == [[BeamLaser]] or WeaponDefs[wdID].type == [[LightningCannon]]) then
+      Script.SetWatchWeapon(wdID, true)
+    end
   end
 end
 
+GG.ClusterProjectiles = clusterProjectiles
 GG.SpawnClusterProjectile = spawnClusterProjectile
 GG.PrepareUnitClusterWeapons = prepareUnitClusterWeapons
 

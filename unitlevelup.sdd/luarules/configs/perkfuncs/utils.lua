@@ -1,4 +1,26 @@
 return {
+  getGoodClusterProjPosition_XYZOrigin = function (x, y, z, targetID)
+    local targetX,targetY,targetZ = Spring.GetUnitPosition(targetID)
+    local tsX,tsY,tsZ,tOfsX,tOfsY,tOfsZ = Spring.GetUnitCollisionVolumeData(targetID)
+    local totalTargetCentreX = tOfsX + targetX --+ tsX * 0.5
+    local totalTargetCentreY = tOfsY + targetY + tsY * 0.5
+    local totalTargetCentreZ = tOfsZ + targetZ --+ tsZ * 0.5
+
+    local diffVec = {
+      x = totalTargetCentreX - x,
+      y = totalTargetCentreY - y,
+      z = totalTargetCentreZ - z
+    }
+
+    local diffVecMag = math.sqrt(diffVec.x * diffVec.x + diffVec.y * diffVec.y + diffVec.z * diffVec.z)
+    local diffVecNorm = {
+      x = diffVec.x / diffVecMag,
+      y = diffVec.y / diffVecMag,
+      z = diffVec.z / diffVecMag
+    }
+    
+    return {x, y, z},diffVecNorm
+  end,
   getGoodClusterProjectilePosition = function (unitID, targetID)
     local unitX,unitY,unitZ = Spring.GetUnitPosition(unitID)
     local targetX,targetY,targetZ = Spring.GetUnitPosition(targetID)
@@ -35,13 +57,13 @@ return {
     local range = range_raw * math.exp(1.05, experience)
     return (GG.HasPerk(unitID, "clusterRange") and range) or range_raw
   end,
-  getRandomTargetListInRange = function (x, y, z, range, ally, cond, n)
+  getRandomTargetListInRange = function (x, y, z, range, ally, n)
     local units = Spring.GetUnitsInSphere(x, y, z, range)
     local unitCandidates = {}
     local unitList = {}
     for i=1,#units do
       local targetable = not Spring.GetUnitRulesParam(units[i], 'untargetable')
-      if (not (Spring.GetUnitAllyTeam(units[i]) == ally)) and cond(units[i]) and targetable then
+      if (not (Spring.GetUnitAllyTeam(units[i]) == ally)) and targetable then
         unitCandidates[#unitCandidates+1] = units[i]
       end
     end

@@ -15,9 +15,6 @@ if (gadgetHandler:IsSyncedCode()) then
 
   function createShieldDummy(unitOrProjID, shieldType, dontRegen)
     local unitID = GG.CreateDummyUnit(unitOrProjID, "shielddummy" .. shieldType)
-    if unitID == nil then
-      return nil
-    end
     Spring.SetUnitRulesParam(unitID, "shieldChargeDisabled", 1) -- we handle this ourselves
     Spring.SetUnitShieldState(unitID, 1, true, 1000)
 

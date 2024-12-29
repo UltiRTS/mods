@@ -48,18 +48,13 @@ local function onPerkFnMulRet(fnName, cond, ...)
       if perkInfo[perkName].activateLast then
         lastFns[#lastFns+1] = perkFuncTable[fnName]
       else
-        local perk = perkFuncTable[fnName](...)
-        if perk ~= nil then
-          res = res * perk
-        end
+        res = res * perkFuncTable[fnName](...)
       end
     end
   end
 
   for i,fn in ipairs(lastFns) do
-    if fn(...) ~= nil then
-      res = res * fn(...)
-    end 
+    res = res * fn(...)
   end
 
   return res
@@ -142,7 +137,6 @@ local function onInvolvedPreDamage(unitID, ...)
   local r2 = onPreDamaged(unitID, ...)
 
   return r1 or r2 or 1.0
-  -- return r1 or 1.0
 end
 
 local function onDeath(unitID, ...)
@@ -173,7 +167,7 @@ local function onProjectileCreated(projectileID, projOwnerID, weaponDefID)
   return onPerkFnNoRet("onProjectileCreated", cond, projectileID, projOwnerID, weaponDefID)
 end
 
-local function onProjectileDestroyed(projectileID)
+local function onProjectileDeath(projectileID)
   local ownerID = Spring.GetProjectileOwnerID(projectileID)
 
   if not unitPerks[ownerID] then
@@ -184,7 +178,7 @@ local function onProjectileDestroyed(projectileID)
     return (unitPerks[ownerID][perkName] and true) or false
   end
 
-  return onPerkFnNoRet("onProjectileDestroyed", cond, projectileID)
+  return onPerkFnNoRet("onProjectileDeath", cond, projectileID)
 end
 
 local function onUnitExperience(unitID, ...)
@@ -358,7 +352,7 @@ function gadget:ProjectileCreated(projectileID, projOwnerID, weaponDefID)
   onProjectileCreated(projectileID, projOwnerID, weaponDefID)
 end
 
-function gadget:UnitDamagedWithProj(unitID, unitDefID, unitTeam, damage, paralyzer, weaponID, projectileID, attackerID, attackerDefID, attackerTeam)
+function gadget:UnitDamagedFIXED(unitID, unitDefID, unitTeam, damage, paralyzer, weaponID, projectileID, attackerID, attackerDefID, attackerTeam)
   return onInvolvedDamage(unitID, unitDefID, unitTeam, damage, paralyzer, weaponID, projectileID, attackerID, attackerDefID, attackerTeam)
 end
 

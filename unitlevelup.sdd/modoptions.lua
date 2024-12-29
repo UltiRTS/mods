@@ -1,4 +1,5 @@
 local uluOptions = { 
+  aielites = { name = "AI Elites enabled", default = 0.0 },
   scaleMult = { name = "Level Scale Multiplier", default = 1.025 },
   maxHPMult = { name = "Level HP Multiplier", default = 1.1 },
   speedMult = { name = "Level Speed Multiplier", default = 1.025 },

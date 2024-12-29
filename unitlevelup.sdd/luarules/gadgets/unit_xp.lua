@@ -24,26 +24,13 @@ local spEcho = Spring.Echo
 local allyTeamByTeam = {}
 
 function gadget:UnitDamaged(unitID, unitDefID, unitTeam, damage, paralyzer, weaponID, attackerID, attackerDefID, attackerTeam)
-	if not attackerID then
+	if not attackerID or not spValidUnitID(attackerID)
+	or spAreTeamsAllied(unitTeam, attackerTeam)
+	or GG.DummyUnits[attackerID]
+	--or paralyzer -- requires a sensible formula? LOL
+	then
 		return
 	end
-	if not spValidUnitID(attackerID) then
-		return
-	end
-	if spAreTeamsAllied(unitTeam, attackerTeam) then
-		return
-	end
-	if GG.DummyUnits[attackerID] then
-		return
-	end
-
-	-- if not attackerID or not spValidUnitID(attackerID)
-	-- or spAreTeamsAllied(unitTeam, attackerTeam)
-	-- or GG.DummyUnits[attackerID]
-	-- --or paralyzer -- requires a sensible formula? LOL
-	-- then
-	-- 	return
-	-- end
 
 	local hp, maxHP = spGetUnitHealth(unitID)
 	local victimXP = spGetUnitExperience(unitID)

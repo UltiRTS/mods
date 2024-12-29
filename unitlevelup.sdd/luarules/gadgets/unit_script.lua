@@ -211,6 +211,37 @@ local section = 'unit_script.lua'
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+local function CheckForDesiredThread()
+	if Spring.GetGameFrame() < 330*30 then
+		return
+	end
+	for unitID, data in pairs(units) do
+		if Spring.GetUnitDefID(unitID) == UnitDefNames["amphsupport"].id then
+			for thread, threadData in pairs(data.threads) do
+				if threadData.signal_mask == 128 then
+					--Spring.Utilities.UnitEcho(unitID, 'f')
+				end
+			end
+		end
+	end
+	for frame, zzz in pairs(sleepers) do
+		for i = 1, #zzz do
+			local threadData = zzz[i]
+			local unitID = threadData.unitID
+			if Spring.GetUnitDefID(unitID) == UnitDefNames["amphsupport"].id then
+				if threadData.signal_mask == 128 then
+					--Spring.Utilities.UnitEcho(unitID, 'f')
+					--Spring.Echo("frame", frame, "curFrame", Spring.GetGameFrame())
+				end
+			end
+		end
+	end
+end
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
 -- Helper for Destroy and Signal.
 -- NOTE:
 --   Must not change the relative order of all other elements!
@@ -257,13 +288,14 @@ local function WakeUp(thread, ...)
 	thread.container = nil
 	local co = thread.thread
 	if debugMode and not co then
-		Spring.Echo("Error in WakeUp", thread.unitID)
+		Spring.Echo("Error in WakeUp (nil coroutine)", thread.unitID)
 		Spring.Utilities.UnitEcho(thread.unitID, UnitDefs[Spring.GetUnitDefID(thread.unitID)].name)
 	end
 	local good, err = co_resume(co, ...)
 	if (not good) then
 		Spring.Log(section, LOG.ERROR, err)
-		Spring.Log(section, LOG.ERROR, debug.traceback(co))
+		Spring.Echo("Error in WakeUp (co_resume failure)", thread.unitID)
+		Spring.Utilities.UnitEcho(thread.unitID, UnitDefs[Spring.GetUnitDefID(thread.unitID)].name .. " script error")
 		RunOnError(thread)
 	end
 end
@@ -345,7 +377,7 @@ function Spring.UnitScript.WaitForMove(piece, axis)
 end
 
 -- overwrites engine's WaitForTurn
-local tau = 2 * math.pi
+local tau = math.tau
 function Spring.UnitScript.WaitForTurn(piece, axis)
 	local activeUnit = GetActiveUnit()
 	local speed = activeUnit.pieceRotSpeeds[piece][axis]
@@ -478,13 +510,14 @@ function Spring.UnitScript.Show(piece)
 end
 
 -- may be useful to other gadgets
-function Spring.UnitScript.GetScriptEnv(unitID)
+local function GetScriptEnv(unitID)
 	local unit = units[unitID]
 	if unit then
 		return unit.env
 	end
 	return nil
 end
+Spring.UnitScript.GetScriptEnv = GetScriptEnv
 
 function Spring.UnitScript.GetLongestReloadTime(unitID)
 	local longest = 0
@@ -535,6 +568,14 @@ local function Basename(filename)
 	return filename:match("[^\\/:]*$") or filename
 end
 
+local function preprocess_math_rad(expression)
+	local number = tonumber(expression)
+	if number then
+		return tostring(math.rad(number))
+	else
+		return "math.rad(" .. expression .. ")"
+	end
+end
 
 local function LoadChunk(filename)
 	local text = VFS.LoadFile(filename, VFSMODE)
@@ -542,6 +583,16 @@ local function LoadChunk(filename)
 		Spring.Log(section, LOG.ERROR, "Failed to load: " .. filename)
 		return nil
 	end
+	
+	-- pre-process constants (for example "math.rad(180)" -> "3.1415")
+	-- to avoid tons of needless global dereferences, function calls etc
+	text = text:gsub("math%.pi", math.pi)
+	text = text:gsub("math%.tau", math.tau)
+	text = text:gsub("([xyz])_axis", { x = 1, y = 2, z = 3 })
+	text = text:gsub("SFX%.([_%u]+)", SFX)
+	text = text:gsub("COB%.([_%u]+)", COB)
+	text = text:gsub("math%.rad%(([^%)]*)%)", preprocess_math_rad)
+
 	local chunk, err = loadstring(scriptHeader .. text, filename)
 	if (chunk == nil) then
 		Spring.Log(section, LOG.ERROR, "Failed to load: " .. Basename(filename) .. "  (" .. err .. ")")
@@ -569,6 +620,9 @@ end
 function gadget:Initialize()
 	Spring.Log(section, LOG.INFO, string.format("Loading gadget: %-18s  <%s>", ghInfo.name, ghInfo.basename))
 	gadgetHandler:AddChatAction("scriptdebug", ToggleScriptDebug, "Toggles script debug output.")
+	
+	-- Useful script libraries
+	LoadChunk("scripts/aimPosTerraform.lua")()
 
 	-- This initialization code has following properties:
 	--  * all used scripts are loaded => early syntax error detection
@@ -736,6 +790,44 @@ end
 
 --------------------------------------------------------------------------------
 
+function gadget:UnitFinished(unitID)
+	local env = GetScriptEnv(unitID)
+	if not env then
+		return
+	end
+
+	local script = env.script
+	if not script then
+		return
+	end
+
+	local func = script.Finish
+	if not func then
+		return
+	end
+
+	CallAsUnitNoReturn(unitID, func)
+end
+
+function gadget:UnitReverseBuilt(unitID)
+	local env = GetScriptEnv(unitID)
+	if not env then
+		return
+	end
+
+	local script = env.script
+	if not script then
+		return
+	end
+
+	local func = script.ReverseBuild
+	if not func then
+		return
+	end
+
+	CallAsUnitNoReturn(unitID, func)
+end
+
 function gadget:UnitCreated(unitID, unitDefID)
 	local ud = UnitDefs[unitDefID]
 	local chunk = scripts[ud.scriptName]
@@ -778,32 +870,32 @@ function gadget:UnitCreated(unitID, unitDefID)
   CallAsUnitNoReturn(unitID, chunk)
 
 	-- unit level ups stuff
-  local UnitDef = UnitDefs[unitDefID]
-  if not UnitDef.customParams.disable_level_weapon then
-    for _,fidx in pairs({ "QueryWeapon", "AimFromWeapon", "FireWeapon", "AimWeapon" }) do
-      if env.script[fidx] then
-        local hookFn = function(fn, fnName)
-          return function(num, ...)
-            local wepNum = GG.unitWeapons[unitID]
-            local UnitDef = UnitDefs[unitDefID]
-            if UnitDef.customParams.num_normal_weapons and num > tonumber(UnitDef.customParams.num_normal_weapons) then
-              if fnName == "AimWeapon" then
-                return wepNum and wepNum == num
-              end
+	local UnitDef = UnitDefs[unitDefID]
+	if not UnitDef.customParams.disable_level_weapon then
+    	for _,fidx in pairs({ "QueryWeapon", "AimFromWeapon", "FireWeapon", "AimWeapon" }) do
+    	  if env.script[fidx] then
+    	    local hookFn = function(fn, fnName)
+    	      return function(num, ...)
+    	        local wepNum = GG.unitWeapons[unitID]
+    	        local UnitDef = UnitDefs[unitDefID]
+     	       if UnitDef.customParams.num_normal_weapons and num > tonumber(UnitDef.customParams.num_normal_weapons) then
+    	          if fnName == "AimWeapon" then
+    	            return wepNum and wepNum == num
+    	          end
 
-              if WepNum and wepNum == num then
-                return fn(1, ...)
-              end
-            end
+    	          if WepNum and wepNum == num then
+    	            return fn(1, ...)
+    	          end
+    	        end
 
-            return fn(num, ...)
-          end
-        end
+    	        return fn(num, ...)
+    	      end
+    	    end
 
-        env.script[fidx] = hookFn(env.script[fidx], fidx)
-        setfenv(env.script[fidx], env)
-      end
-    end
+    	    env.script[fidx] = hookFn(env.script[fidx], fidx)
+    	    setfenv(env.script[fidx], env)
+    	  end
+    	end
 	end
 
 	for _,fidx in pairs({ "Carrier_droneStarted", "Carrier_droneCompleted"}) do
@@ -937,6 +1029,7 @@ function gadget:GameFrame()
 			PopActiveUnitID()
 		end
 	end
+		--CheckForDesiredThread()
 end
 
 --------------------------------------------------------------------------------

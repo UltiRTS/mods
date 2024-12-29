@@ -10,5 +10,6 @@ return {
     if minime_ff or master_ff or minime_between_ff then
       return 0.0
     end
+	return 1.0
   end
 }

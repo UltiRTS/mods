@@ -14,5 +14,6 @@ return {
   levelsPerPerk = (modOptions["levelsperperk"] and tonumber(modOptions["levelsperperk"])) or 10,
   xpScale = (modOptions["xpscale"] and tonumber(modOptions["xpscale"])) or 2.0,
   xpFalloff = (modOptions["xpfalloff"] and tonumber(modOptions["xpfalloff"])) or 0.97,
-  damageMult = (modOptions["damagemult"] and tonumber(modOptions["damagemult"])) or 1.05
+  damageMult = (modOptions["damagemult"] and tonumber(modOptions["damagemult"])) or 1.05,
+  aiElites = (modOptions["aielites"] and tonumber(modOptions["aielites"])) or 0.0,
 }

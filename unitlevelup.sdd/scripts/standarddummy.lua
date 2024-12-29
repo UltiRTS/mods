@@ -13,14 +13,9 @@ function script.AimFromWeapon()
 end
 
 function script.AimWeapon(num, heading, pitch)
-	-- return true
-	return needed
+	return true
 end
 
 function script.QueryWeapon(num)
-	if type(num) ~= 'number' then
-		return root
-	else
-		return needed
-	end
+	return needed
 end

@@ -26,6 +26,7 @@ local function PASAddUnit(unitID)
 end
 
 GG.PASAddUnit = PASAddUnit
+GG.GlobalAutoperkEnabled = {}
 
 function gadget:Initialize()
   local totalTeamList = {}
@@ -44,6 +45,8 @@ function gadget:Initialize()
       globalAutoperkEnabled[teamID] = true
     end
   end
+
+  GG.GlobalAutoperkEnabled = globalAutoperkEnabled
 end
 
 function gadget:DestroyUnit(unitID)

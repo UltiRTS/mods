@@ -53,41 +53,46 @@ local function findWeapons(ud)
 end
 
 local function isBuilding(ud)
-	return (ud.maxVelocity and (ud.maxVelocity > 0.01)) or true
+	return (ud.speed and (ud.speed > 0.01)) or true
 end
 
-local function initMiniUnitDef(ud, costKey)
-		local udMiniName = ud.unitname .. "_mini"
-		UnitDefs[udMiniName] = CopyTable(ud, true)
-		
-		UnitDefs[udMiniName].unitname = ud.unitname .. "_mini"
-		UnitDefs[udMiniName].maxdamage = ud.maxdamage * 0.2;
-		UnitDefs[udMiniName].customparams.final_form = true
+local function initMiniUnitDef(unitname, ud, costKey)
+    local udMiniName = unitname .. "_mini"
+    UnitDefs[udMiniName] = CopyTable(ud, true)
+    
+    if ud.health then
+        UnitDefs[udMiniName].health = ud.health * 0.2
+    end
+    
+    UnitDefs[udMiniName].customparams.final_form = true
+    UnitDefs[udMiniName].customparams.statsname = unitname
 
-		UnitDefs[udMiniName].buildcostmetal = ud.buildcostmetal and ud.buildcostmetal * 0.25
-		UnitDefs[udMiniName].buildcostenergy = ud.buildcostenergy and ud.buildcostenergy * 0.25
-		UnitDefs[udMiniName].buildtime = ud.buildtime and ud.buildtime * 0.25
-		local shield = findShield(UnitDefs[udMiniName])
-		if shield then
-			UnitDefs[udMiniName].def.shieldradius = shield.def.shieldradius * 0.25
-			UnitDefs[udMiniName].def.shieldpower = shield.def.shieldpower + ud.maxdamage * 0.15
-			UnitDefs[udMiniName].def.shieldpowerregen = ud.maxdamage * 0.015
-			UnitDefs[udMiniName].def.shieldpowerregenenergy = ud.maxdamage / 2000.0
+    UnitDefs[udMiniName].metalcost = ud.metalcost and ud.metalcost * 0.25
+    UnitDefs[udMiniName].energycost = ud.energycost and ud.energycost * 0.25
+    UnitDefs[udMiniName].buildtime = ud.buildtime and ud.buildtime * 0.25
 
-			UnitDefs[udMiniName].customparams.shield_radius = shield.def.shieldradius * 0.25
-			UnitDefs[udMiniName].customparams.shield_power = shield.def.shieldpower
-			UnitDefs[udMiniName].customparams.shield_recharge_delay = (ud.customparams.shield_recharge_delay or 0.0) or 0.25
-			UnitDefs[udMiniName].customparams.shield_rate = shield.def.shieldpowerregen
-		end
+    local shield = findShield(UnitDefs[udMiniName])
+    if shield then
+        UnitDefs[udMiniName].def.shieldradius = shield.def.shieldradius * 0.25
+        UnitDefs[udMiniName].def.shieldpower = shield.def.shieldpower + (ud.health and ud.health * 0.15 or 0)
+        UnitDefs[udMiniName].def.shieldpowerregen = ud.health and ud.health * 0.015 or 0
+        UnitDefs[udMiniName].def.shieldpowerregenenergy = ud.health and ud.health / 2000.0 or 0
 
-		for wdn,wd in pairs(UnitDefs[udMiniName].weapondefs) do
-			for wdDamageType,wdDamage in pairs(wd.damage) do
-				wd.damage[wdDamageType] = wdDamage * 0.25
-			end
+        UnitDefs[udMiniName].customparams.shield_radius = shield.def.shieldradius * 0.25
+        UnitDefs[udMiniName].customparams.shield_power = shield.def.shieldpower
+        UnitDefs[udMiniName].customparams.shield_recharge_delay = (ud.customparams.shield_recharge_delay or 0.0) or 0.25
+        UnitDefs[udMiniName].customparams.shield_rate = shield.def.shieldpowerregen
+    end
 
-			UnitDefs[udMiniName].weapondefs[wdn].areaOfEffect = ud.weapondefs[wdn].areaOfEffect and ud.weapondefs[wdn].areaOfEffect * 0.5;
-		end
+    for wdn, wd in pairs(UnitDefs[udMiniName].weapondefs) do
+        for wdDamageType, wdDamage in pairs(wd.damage) do
+            wd.damage[wdDamageType] = wdDamage * 0.25
+        end
+
+        UnitDefs[udMiniName].weapondefs[wdn].areaOfEffect = ud.weapondefs[wdn].areaOfEffect and ud.weapondefs[wdn].areaOfEffect * 0.5
+    end
 end
+
 
 local defaultDummyUnitDef = UnitDefs["standarddummy"]
 local udParseList = {}
@@ -104,7 +109,6 @@ local function createDummyWeaponWeaponDef(wdName, wd)
 		local wdDummyName = "dummywep_" .. wdName
 		numWeaponDummies = numWeaponDummies + 1
 		UnitDefs[newDefName] = CopyTable(defaultDummyUnitDef, true)
-		UnitDefs[newDefName].unitname = newDefName
 		UnitDefs[newDefName].name = "Weapon dummy (" .. wdDummyName .. ")"
 		UnitDefs[newDefName].weapons[1] = {
 				def = string.upper(wdDummyName),
@@ -117,7 +121,7 @@ local function createDummyWeaponWeaponDef(wdName, wd)
 end
 
 local function createDummyWeaponUnitDef(ud)
-	local cost = math.max (ud.buildcostenergy or 0, ud.buildcostmetal or 0, ud.buildtime or 0)
+	local cost = math.max (ud.energycost or 0, ud.metalcost or 0, ud.buildtime or 0)
 	if ud.weapons and (not hasBadDef(ud)) and (not onlyMiscWeps(ud.weapondefs)) and (cost > 100) then
 		for wdName,wd in pairs(ud.weapondefs) do
 			createDummyWeaponWeaponDef(wdName, wd)
@@ -156,11 +160,11 @@ for udName,_ in pairs(udParseList) do
 		ud.customparams = {} -- we need this now
 	end
 
-	local cost = math.max (ud.buildcostenergy or 0, ud.buildcostmetal or 0, ud.buildtime or 0)
+	local cost = math.max (ud.energycost or 0, ud.metalcost or 0, ud.buildtime or 0)
 	createDummyWeaponUnitDef(ud)
 
 	if (not ud.weapons or #ud.weapons > 10 or hasBadDef(ud) or onlyMiscWeps(ud.weapondefs)) and
-		(not isInWhitelist(ud.unitname))
+		(not isInWhitelist(udName))
 	then
 		ud.customparams.disable_level_weapon = true
 	else
@@ -185,12 +189,12 @@ for udName,_ in pairs(udParseList) do
 
 			if costKey == "medcost" then
 				for _,subcat in pairs({"riot", "raid", "skirm", "assault"}) do
-					costKey = costKey .. ((string.find(ud.unitname, subcat) and subcat) or "")
+					costKey = costKey .. ((string.find(udName, subcat) and subcat) or "")
 				end
 			end
 		end
 
-		if not blacklist.noweapon[ud.unitname] then
+		if not blacklist.noweapon[udName] then
 			local levelWeapons = levelWeaponList[costKey]
 			ud.weapons = ud.weapons or {}
 			ud.weapondefs = ud.weapondefs or {}
@@ -212,7 +216,7 @@ for udName,_ in pairs(udParseList) do
 			ud.customparams.disable_level_weapon = true
 		end
 
-		initMiniUnitDef(ud, costKey)
+		initMiniUnitDef(udName, ud, costKey)
 	end
 end
 
